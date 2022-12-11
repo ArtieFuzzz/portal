@@ -1,7 +1,6 @@
-use std::env;
 use worker::*;
 
-pub async fn is_authenticated(req: &Request) -> Result<bool> {
+pub async fn is_authenticated(req: &Request, ctx: &RouteContext<()>) -> Result<bool> {
     let header = req.headers().get("Authorization")?.unwrap_or_default();
 
     if header.is_empty() {
@@ -15,12 +14,12 @@ pub async fn is_authenticated(req: &Request) -> Result<bool> {
     }
 
     let credentials = header_details[1];
-    let verified = verify_basic(credentials);
+    let verified = verify_basic(credentials, ctx);
 
     Ok(verified)
 }
 
-fn verify_basic(credentials: &str) -> bool {
+fn verify_basic(credentials: &str, ctx: &RouteContext<()>) -> bool {
     let decoded = base64::decode(credentials).unwrap();
     let stringified = String::from_utf8(decoded).unwrap();
     // let splitted = stringified
@@ -28,9 +27,9 @@ fn verify_basic(credentials: &str) -> bool {
     //     .map(|v| v.to_string())
     //     .collect::<Vec<_>>();
 
-    let portal_auth = match env::var("PORTAL_AUTH") {
+    let portal_auth = match ctx.var("PORTAL_AUTH") {
         Err(_) => panic!("PORTAL_AUTH not specified"),
-        Ok(value) => value,
+        Ok(value) => value.to_string(),
     };
 
     stringified == portal_auth

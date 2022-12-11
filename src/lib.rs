@@ -40,7 +40,7 @@ pub async fn main(req: Request, env: Env, _context: Context) -> Result<Response>
             }
         })
         .post_async("/:slug", |mut req, ctx| async move {
-            if !is_authenticated(&req).await? {
+            if !is_authenticated(&req, &ctx).await? {
                 return Response::error("NOT_AUTHENTICATED", 403);
             }
 
@@ -48,21 +48,24 @@ pub async fn main(req: Request, env: Env, _context: Context) -> Result<Response>
                 Some(slug) => {
                     let payload = req.json::<UrlPayload>().await?;
 
-                    ctx.kv("url_slugs")?.put(slug, payload.url)?;
+                    ctx.kv("url-slugs")?
+                        .put(slug, payload.url)?
+                        .execute()
+                        .await?;
 
-                    Response::error("OK", 400)
+                    Response::ok("OK")
                 }
                 None => Response::error("NO_SLUG", 400),
             }
         })
         .delete_async("/:slug", |req, ctx| async move {
-            if !is_authenticated(&req).await? {
+            if !is_authenticated(&req, &ctx).await? {
                 return Response::error("NOT_AUTHENTICATED", 403);
             }
 
             match ctx.param("slug") {
                 Some(slug) => {
-                    match ctx.kv("url_slugs")?.delete(slug).await {
+                    match ctx.kv("url-slugs")?.delete(slug).await {
                         Ok(_) => {}
                         Err(_) => return Response::error("UNKNOWN_SLUG", 400),
                     }
@@ -75,10 +78,6 @@ pub async fn main(req: Request, env: Env, _context: Context) -> Result<Response>
         .run(req, env)
         .await
 }
-
-/* fn is_authenticated(req: Request, env: Env) -> Result<bool> {
-  let key_pair = ES256KeyPair::
-} */
 
 fn set_console_error_hook() {
     set_panic_hook()
