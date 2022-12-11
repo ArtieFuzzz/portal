@@ -1,0 +1,22 @@
+[package]
+name = "cloudflare-worker"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook"]
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+worker = "0.0.12"
+
+# Ease of Debugging
+console_error_panic_hook = { version = "0.1.1", optional = true }
