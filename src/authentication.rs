@@ -22,10 +22,6 @@ pub async fn is_authenticated(req: &Request, ctx: &RouteContext<()>) -> Result<b
 fn verify_basic(credentials: &str, ctx: &RouteContext<()>) -> bool {
     let decoded = base64::decode(credentials).unwrap();
     let stringified = String::from_utf8(decoded).unwrap();
-    // let splitted = stringified
-    //     .split(':')
-    //     .map(|v| v.to_string())
-    //     .collect::<Vec<_>>();
 
     let portal_auth = match ctx.var("PORTAL_AUTH") {
         Err(_) => panic!("PORTAL_AUTH not specified"),
