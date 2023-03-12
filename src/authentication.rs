@@ -1,5 +1,19 @@
 use worker::*;
 
+use worker::Response;
+
+macro_rules! check_authentication {
+    ($req:ident, $ctx:ident) => {
+        use crate::authentication::is_authenticated;
+
+        if !is_authenticated(&$req, &$ctx).await? {
+            return Response::error("NOT_AUTHENTICATED", 403)
+        }
+    };
+}
+
+pub(crate) use check_authentication;
+
 pub async fn is_authenticated(req: &Request, ctx: &RouteContext<()>) -> Result<bool> {
     let header = req.headers().get("Authorization")?.unwrap_or_default();
 

@@ -1,8 +1,9 @@
 mod authentication;
+mod html;
 
 use std::str::FromStr;
 
-use authentication::is_authenticated;
+use authentication::check_authentication;
 use console_error_panic_hook::set_once as set_panic_hook;
 use serde::{Deserialize, Serialize};
 use worker::*;
@@ -19,7 +20,7 @@ pub async fn main(req: Request, env: Env, _context: Context) -> Result<Response>
     let router = Router::new();
 
     router
-        .get("/", |_req, _ctx| Response::ok("owo"))
+        .get("/", |_req, _ctx| Response::from_html(html::HOME_PAGE))
         .get_async("/:slug", |_req, ctx| async move {
             match ctx.param("slug") {
                 Some(slug) => {
@@ -40,9 +41,7 @@ pub async fn main(req: Request, env: Env, _context: Context) -> Result<Response>
             }
         })
         .post_async("/:slug", |mut req, ctx| async move {
-            if !is_authenticated(&req, &ctx).await? {
-                return Response::error("NOT_AUTHENTICATED", 403);
-            }
+            check_authentication!(req, ctx);
 
             match ctx.param("slug") {
                 Some(slug) => {
@@ -59,9 +58,7 @@ pub async fn main(req: Request, env: Env, _context: Context) -> Result<Response>
             }
         })
         .delete_async("/:slug", |req, ctx| async move {
-            if !is_authenticated(&req, &ctx).await? {
-                return Response::error("NOT_AUTHENTICATED", 403);
-            }
+            check_authentication!(req, ctx);
 
             match ctx.param("slug") {
                 Some(slug) => {
